@@ -1,0 +1,31 @@
+- name: Install Stow
+  hosts: your_target_servers
+  become: yes  # Use sudo to gain root privileges
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+      tags:
+        - update
+
+    - name: Install Stow
+      apt:
+        name: stow
+        state: present
+      tags:
+        - install
+
+    - name: Verify Stow installation
+      command: stow --version
+      register: stow_version
+      changed_when: false
+      failed_when: false
+      tags:
+        - verify
+
+    - debug:
+        var: stow_version.stdout
+      when: stow_version.rc == 0
+      tags:
+        - verify
