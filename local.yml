@@ -1,6 +1,6 @@
 - name: Install Stow
   hosts: localhost
-  become: yes  # Use sudo to gain root privileges
+  become: yes # Use sudo to gain root privileges
   become_method: sudo
 
   tasks:
@@ -30,3 +30,18 @@
       when: stow_version.rc == 0
       tags:
         - verify
+
+    - name: Decrypt files in a folder
+      ansible.builtin.find:
+        paths: ./gpg/ # Replace with the folder containing your vaulted files
+        recurse: yes
+        patterns: "*.*" # Adjust the file extension as needed
+      register: vaulted_files
+
+    - name: Decrypt each vaulted file
+      ansible.builtin.vault:
+        path: "{{ item.path }}"
+        output: "{{ item.path | dirname }}/decrypted_{{ item.path | basename }}"
+      with_items: "{{ vaulted_files.files }}"
+      when: item.path is defined
+# Add any other tasks as needed
