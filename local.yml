@@ -39,7 +39,7 @@
       register: vaulted_files
 
     - name: Decrypt each vaulted file
-      ansible.builtin.vault:
+      vault:
         path: "{{ item.path }}"
         output: "{{ item.path | dirname }}/decrypted_{{ item.path | basename }}"
       with_items: "{{ vaulted_files.files }}"
