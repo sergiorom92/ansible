@@ -38,10 +38,9 @@
         patterns: "*.*" # Adjust the file extension as needed
       register: vaulted_files
 
-    - name: Decrypt each vaulted file
-      vault:
-        path: "{{ item.path }}"
-        output: "{{ item.path | dirname }}/decrypted_{{ item.path | basename }}"
+    - name: Decrypt and move each encrypted file
+      ansible.builtin.command: ansible-vault decrypt "{{ item.path }}" --output: "{{ item.path | dirname }}/decrypted_{{ item.path | basename }}"
       with_items: "{{ vaulted_files.files }}"
+      delegate_to: localhost  # Ensure it's executed on the local machine
       when: item.path is defined
 # Add any other tasks as needed
