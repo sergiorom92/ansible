@@ -1,5 +1,5 @@
 - name: Install Stow
-  hosts: your_target_servers
+  hosts: localhost
   become: yes  # Use sudo to gain root privileges
 
   tasks:
