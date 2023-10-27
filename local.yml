@@ -1,46 +1,29 @@
-- name: Install Stow
+- name: Setup Machine
   hosts: localhost
   become: yes # Use sudo to gain root privileges
   become_method: sudo
-
+  vars:
+    source_key: "./.ssh/id_rsa"
+    dest_key: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+    personal: "{{ lookup('env', 'HOME') }}/personal"
+  pre_tasks:
+    - name: Update Apt
+      become: true
+    apt:
+      force_apt_get: true
+      update_cache: true
+      state: present
+    tags:
+      - install
+      - core
   tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
-      tags:
-        - update
+    - include: tasks/install-ssh-keys.yml
+    - include: tasks/git-setup.yml
+    - include: tasks/core-setup.yml
+    - include: tasks/node-setup.yml
+    - include: tasks/install-npm-packages.yml
+    # - include: tasks/zsh-setup.yml
+    - include: tasks/nvim-setup.yml
+    - include: tasks/stow-setup.yml
 
-    - name: Install Stow
-      apt:
-        name: stow
-        state: present
-      tags:
-        - install
-
-    - name: Verify Stow installation
-      command: stow --version
-      register: stow_version
-      changed_when: false
-      failed_when: false
-      tags:
-        - verify
-
-    - debug:
-        var: stow_version.stdout
-      when: stow_version.rc == 0
-      tags:
-        - verify
-
-    - name: Decrypt files in a folder
-      ansible.builtin.find:
-        paths: ./gpg/ # Replace with the folder containing your vaulted files
-        recurse: yes
-        patterns: "*.*" # Adjust the file extension as needed
-      register: vaulted_files
-
-    - name: Decrypt and move each encrypted file
-      ansible.builtin.command: ansible-vault decrypt "{{ item.path }}" --output "{{ item.path | dirname }}/decrypted_{{ item.path | basename }}"
-      with_items: "{{ vaulted_files.files }}"
-      delegate_to: localhost  # Ensure it's executed on the local machine
-      when: item.path is defined
 # Add any other tasks as needed
