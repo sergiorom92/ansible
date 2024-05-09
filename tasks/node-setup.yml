@@ -1,0 +1,6 @@
+- name: Verify Brew installation
+  shell: which fnm
+  register: fnm_exists
+
+- name: Install Node LTS
+  shell: fnm install --lts

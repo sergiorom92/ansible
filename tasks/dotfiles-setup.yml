@@ -1,0 +1,29 @@
+- name: Verify Stow installation
+  command: stow --version
+  register: stow_version
+  changed_when: false
+  failed_when: false
+  tags:
+    - verify
+    - dotfiles
+    - stow
+
+- name: Cloning dotfiles
+  ansible.builtin.git:
+    repo: "git@github.com:sergiorom92/dotfiles.git"
+    dest: "{{ lookup('env', 'HOME') }}/dotfiles"
+    recursive: yes
+    update: yes
+    accept_hostkey: yes
+    version: main
+  tags:
+    - install
+    - dotfiles
+    - stow
+
+- name: Stow dotfiles
+  shell: cd $HOME/dotfiles && stow --target=$HOME */
+  tags:
+    - install
+    - dotfiles
+    - stow

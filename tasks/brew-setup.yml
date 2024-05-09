@@ -1,0 +1,92 @@
+- name: Verify Brew installation
+  shell: which brew
+  register: brew_exists
+  ignore_errors: true
+  failed_when: brew_exists.rc != 1 and brew_exists.rc != 0
+
+- name: Install Brew
+  become: no
+  shell: NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+  when: brew_exists.rc == 1
+
+- name: Update Brew
+  become: no
+  homebrew:
+    update_homebrew: true
+    upgrade_all: true
+
+- name: Update Brew Taps
+  become_user: sromero
+  become: no
+  vars:
+    brew_taps:
+      - simplydanny/pass-extensions
+      - homebrew/cask-fonts
+  homebrew_tap:
+    name: "{{ brew_taps }}"
+
+- name: Install Neovim from Brew
+  become: no
+  homebrew:
+    name: neovim
+    state: head
+  ignore_errors: yes
+
+- name: Install Brew packages
+  become: no
+  vars:
+    brew_packages:
+      - bat
+      - eza
+      - fd
+      - fnm
+      - fzf
+      - git
+      - git-delta
+      - go
+      - btop
+      - htop
+      - jq
+      - lazygit
+      - luarocks
+      - pass
+      - pass-otp
+      - pass-update
+      - pinentry-mac
+      - ripgrep
+      - koekeishiya/formulae/skhd
+      - starship
+      - stow
+      - tmux
+      - zbar
+      - zoxide
+  homebrew:
+    name: "{{ brew_packages }}"
+    state: present
+  ignore_errors: yes
+
+- name: Install Brew casks packages
+  become: no
+  vars:
+    brew_casks_packages:
+      - alacritty
+      - amethyst
+      - arc
+      - discord
+      - firefox
+      - font-caskaydia-cove-nerd-font
+      - font-jetbrains-mono-nerd-font
+      # - jetbrains-toolbox
+      - keycastr
+      - kitty
+      # - logi-options-plus
+      - raycast
+      - stats
+      - slack
+      - visual-studio-code
+      - wezterm
+      - whatsapp
+  homebrew_cask:
+    name: "{{ brew_casks_packages }}"
+    state: present
+  ignore_errors: yes

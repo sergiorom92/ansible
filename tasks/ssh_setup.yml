@@ -1,0 +1,38 @@
+- name: List ssh keys files
+  ansible.builtin.find:
+    paths: ./ssh/.ssh/ # Replace with the folder containing your vaulted files
+    recurse: yes
+    patterns: "*" # Adjust the file extension as needed
+  register: vaulted_files
+
+- name: Install pexpect
+  command: pip3 install pexpect
+
+- name: Decrypt each encrypted file
+  expect:
+    command: ansible-vault decrypt {{ item.path }}
+    responses:
+      (?i)password: "{{ password }}"
+  with_items: "{{ vaulted_files.files }}"
+  delegate_to: localhost # Ensure it's executed on the local machine
+  when: item.path is defined
+
+- name: Stow keys
+  shell: stow --target=$HOME ssh/
+  tags:
+    - install
+    - dotfiles
+    - stow
+
+- name: Avoid git repo to be dirty
+  shell: git update-index --skip-worktree "{{ item.path }}"
+  with_items: "{{ vaulted_files.files }}"
+
+- name: Restart ssh agent
+  shell: eval "$(ssh-agent -s)"
+  ignore_errors: true
+
+- name: Add ssh keys
+  shell: ssh-add ~/.ssh/{{ item.path | basename }}
+  with_items: "{{ vaulted_files.files }}"
+  ignore_errors: true
